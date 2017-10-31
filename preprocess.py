@@ -1,59 +1,57 @@
+'''This functions cleans all the tweets.
+It first removes all the #tags, then make sure the tweets
+does not contain http links, non ASCII charaters or that the
+first letter of the tweet is @ (to ensure that the tweet is not out of context).
+Then it removes any @tagging and any mention of the word sarcasm or sarcastic.
+If after this the tweet is not empty and contains at least 3 words, it is added to the list.
+Finally, duplicate tweets are removed.'''
 
-# coding: utf-8
+import numpy as np
+import csv
+import re
 
-# ## Preprocessing the Tweets
-# 
-# 
-# Before extracting features from our text data it is important to clean it up. To remove the possibility of having sarcastic tweets in which the sarcasm is either in an attached link or in response to another tweet, we simply discard all tweets that have http addresses in them and all tweets that start with the @ symbol. Ideally we would only collect tweets that are written in English. When we collect sarcastic tweets, the requirement that it contains the label #sarcasm makes it very likely that the tweet will be in English. To maximize the number of English tweets when we collect non-sarcastic tweets, we require that the location of the tweet is either San-Francisco or New-York. In addition to these steps, we remove tweets which contain Non-ASCII characters. We then remove all the hashtags, all the friend tags and all mentions of the word sarcasm or sarcastic from the remaining tweets. If after this pruning stage the tweet is at least 3 words long, we add it to our dataset. We add this last requirement in order to remove some noise from the sarcastic dataset since I do not believe that one can be sarcastic with only 2 words. Finally, we remove duplicates.
-
-# In[ ]:
-
-
-import string, re
-import os.path,os
-
-
-# In[ ]:
-
-
-import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
-
-# In[ ]:
-
-
-def prep(text):
-    text = text.lower()
-    return text+'\n'
-
-
-# In[ ]:
-
-
-def cleanify_non_ascii(PATH):
-    '''Generates newtweets.txt in the same directory. Filters non-ascii chars. Didn't remove #'''
-    strings = []
-    #get all tweets in this list 
-    printable = set(string.printable)
+def preprocessing(csv_file_object):
     
-    fout = open(os.path.join(PATH,'newtweets.txt'),'w')
-    i = 0
-    for each in strings:
-        try:
-            each = prep(each)
-            fout.write(each.encode('utf-8'))
-        except: 
-            logging.warning('Filtering out non-unicode characters')
-            filtered = filter(lambda x: x in printable,each)
-            filtered = prep(filtered)
-            fout.write(filtered.encode('utf-8'))
-        i += 1
-    fout.close()
+    data=[]
+    length=[]
+    remove_hashtags = re.compile(r'#\w+\s?')
+    remove_friendtag = re.compile(r'@\w+\s?')
+    remove_sarcasm = re.compile(re.escape('sarcasm'),re.IGNORECASE)
+    remove_sarcastic = re.compile(re.escape('sarcastic'),re.IGNORECASE)    
 
+    for row in csv_file_object:
+        if len(row[0:])==1:
+            temp=row[0:][0]
+            temp=remove_hashtags.sub('',temp)
+            if len(temp)>0 and 'http' not in temp and temp[0]!='@' and '\u' not in temp: 
+                temp=remove_friendtag.sub('',temp) 
+                temp=remove_sarcasm.sub('',temp)
+                temp=remove_sarcastic.sub('',temp)
+                temp=' '.join(temp.split()) #remove useless space
+                if len(temp.split())>2:
+                    data.append(temp)
+                    length.append(len(temp.split()))
+    data=list(set(data)) #remove duplicate tweets
+    data = np.array(data)
+    
+    return data, length
 
-# In[ ]:
+print 'Extracting data'
 
+### POSITIVE DATA ####
+csv_file_object_pos = csv.reader(open('twitDB_sarcasm.csv', 'rU'),delimiter='\n')
+pos_data, length_pos = preprocessing(csv_file_object_pos)
+#print pos_data
 
+### NEGATIVE DATA ####
+csv_file_object_neg = csv.reader(open('twitDB_regular.csv', 'rU'),delimiter='\n')
+neg_data, length_neg = preprocessing(csv_file_object_neg)
 
+print 'Number of  sarcastic tweets :', len(pos_data)
+print 'Average length of sarcastic tweets :', np.mean(length_pos)
+print 'Number of  non-sarcastic tweets :', len(neg_data)
+print 'Average length of non-sarcastic tweets :', np.mean(length_neg)
 
+#save the tweets as binary .npy files
+np.save('posproc',pos_data)
+np.save('negproc',neg_data)
