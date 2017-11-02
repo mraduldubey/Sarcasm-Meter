@@ -1,4 +1,4 @@
-'''BernoulliNB gave slightly better results than MultinomialNB since classfication is binary.'''
+'''BernoulliNB gave slightly better results than MultinomialNB on just TF-IDF feature vector.'''
 
 import numpy as np
 
