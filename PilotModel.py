@@ -1,3 +1,5 @@
+'''BernoulliNB gave slightly better results than MultinomialNB since classfication is binary.'''
+
 import numpy as np
 
 #Load the binary files of sarcastic and non-sarcastic tweets
@@ -13,7 +15,7 @@ print (neutral[:10])
 
 #Import necessary libraries
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
 from scipy.sparse import csr_matrix
@@ -33,9 +35,9 @@ print (len(labels))
 dataset=np.concatenate([sarcasm,neutral])
 print ("Total length of dataset = "+str(len(dataset)))
 
-#Classify using Naive Bayes
-from sklearn.naive_bayes import MultinomialNB
-vec, clf = TfidfVectorizer(min_df=5),MultinomialNB()
+#Classify using Naive Bayes: 
+from sklearn.naive_bayes import BernoulliNB
+vec, clf = TfidfVectorizer(min_df=5),BernoulliNB()
 td_matrix = vec.fit_transform(dataset)
 print ("Shape of matrix = "+str(td_matrix.shape))
 print ("Length of the labels = "+str(len(labels)))
@@ -45,6 +47,6 @@ clf.fit(X_train, y_train)
 y_out = clf.predict(X_test)
 
 print("Accuracy on held-out data: ",      str(100*accuracy_score(y_out, y_test))[0:5], "%\n")
-
-#Accuracy on held-out data:  83.79 %
+ 
+#Accuracy on held-out data: MultinomialNB 83.79 %, BernoulliNB 84.49%
 
