@@ -37,7 +37,7 @@ print ("Total length of dataset = "+str(len(dataset)))
 
 #Classify using Naive Bayes: 
 from sklearn.naive_bayes import BernoulliNB
-vec, clf = TfidfVectorizer(min_df=5),BernoulliNB()
+vec, clf = TfidfVectorizer(min_df=5), BernoulliNB()
 td_matrix = vec.fit_transform(dataset)
 print ("Shape of matrix = "+str(td_matrix.shape))
 print ("Length of the labels = "+str(len(labels)))
@@ -48,5 +48,5 @@ y_out = clf.predict(X_test)
 
 print("Accuracy on held-out data: ",      str(100*accuracy_score(y_out, y_test))[0:5], "%\n")
  
-#Accuracy on held-out data: MultinomialNB 83.79 %, BernoulliNB 84.49%
+#Accuracy on held-out data: MultinomialNB 83.79 %, BernoulliNB 84.49%, DecisionTree=84.40%, RandomForest=82.39%
 
